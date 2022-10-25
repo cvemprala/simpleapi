@@ -22,7 +22,7 @@ func main() {
 type Router struct{}
 
 // TODO: Replace routing with gorilla/mux
-// Bonus: Write your own router (https://benhoyt.com/writings/go-routing/
+// Bonus: Write your own router (https://benhoyt.com/writings/go-routing/, https://www.alexedwards.net/blog/which-go-router-should-i-use)
 func (ro Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.Split(r.URL.Path, "/")[1:]
 	fmt.Println(path, len(path))
