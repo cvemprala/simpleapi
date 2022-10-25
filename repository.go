@@ -35,3 +35,14 @@ func (sr SimpleRepository) Create(simple Simple) (string, error) {
 	}
 	return id, nil
 }
+
+func (sr SimpleRepository) Get(id string) (Simple, error) {
+	sqlStatement := `SELECT * FROM simple WHERE id=$1`
+	row := sr.db.QueryRow(sqlStatement, id)
+	var simple Simple
+	err := row.Scan(&simple.ID, &simple.Name, &simple.Birthday, &simple.Phone, &simple.Email)
+	if err != nil {
+		return Simple{}, err
+	}
+	return simple, nil
+}

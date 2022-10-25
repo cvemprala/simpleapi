@@ -7,6 +7,7 @@ import (
 )
 
 type Simple struct {
+	ID       string
 	Name     string
 	Birthday time.Time
 	Phone    string
@@ -17,6 +18,7 @@ type CreateSimpleHandler struct {
 	repo SimpleRepository
 }
 
+// TODO: Add validation using the validator.v9 package
 func (c CreateSimpleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		w.WriteHeader(http.StatusBadRequest)
