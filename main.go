@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"os"
-	"strings"
+	"time"
 )
 
 func main() {
-	r := Router{}
+	r := mux.NewRouter()
+	r = CreateSimpleapiRouter(r)
 
-	// TODO: Add logging, time measurement middleware
-	// link: https://drstearns.github.io/tutorials/gomiddleware/
 	err := http.ListenAndServe(":8080", r)
 	if err != nil {
 		fmt.Println(err)
@@ -19,52 +20,38 @@ func main() {
 	}
 }
 
-type Router struct{}
+type Logger struct {
+	handler http.Handler
+}
 
-// TODO: Replace routing with gorilla/mux
-// Bonus: Write your own router (https://benhoyt.com/writings/go-routing/, https://www.alexedwards.net/blog/which-go-router-should-i-use)
-func (ro Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.Split(r.URL.Path, "/")[1:]
-	fmt.Println(path, len(path))
-	if len(path) < 1 || path[0] != "api" || path[1] != "simpleapi" {
-		w.WriteHeader(http.StatusNotFound)
-	} else {
-		repo, err := NewSimpleRepository()
-		if len(path) == 2 {
-			if r.Method == http.MethodPost {
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(err.Error()))
-					return
-				}
-				c := CreateSimpleHandler{
-					repo: repo,
-				}
-				c.ServeHTTP(w, r)
-			} else {
-				w.WriteHeader(http.StatusMethodNotAllowed)
-			}
-		} else if len(path) == 3 {
-			if r.Method == http.MethodGet {
-				g := GetSimpleHandler{
-					repository: repo,
-				}
-				g.ServeHTTP(w, r)
-			} else {
-				w.WriteHeader(http.StatusMethodNotAllowed)
-			}
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
+func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	l.handler.ServeHTTP(w, r)
+	log.Printf("%s %s %v", r.Method, r.URL.Path, time.Since(start))
+}
+
+func NewLogger(handlerToWrap http.Handler) *Logger {
+	return &Logger{handlerToWrap}
+}
+
+func CreateSimpleapiRouter(r *mux.Router) *mux.Router {
+	repo, err := NewSimpleRepository()
+
+	if err != nil {
+		return nil
+	}
+	createSimpleHandler := CreateSimpleHandler{
+		repo: repo,
 	}
 
-}
+	getSimpleHandler := GetSimpleHandler{
+		repository: repo,
+	}
 
-type MyHandler struct {
-}
+	apiRouter := r.PathPrefix("/api/simpleapi").Subrouter()
 
-func (m MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(r.URL.Path))
-	fmt.Println(strings.Split(r.URL.Path, "/"))
-	w.Write([]byte("\nhello"))
+	apiRouter.Handle("", NewLogger(createSimpleHandler)).Methods("POST")
+	apiRouter.Handle("/{id}", NewLogger(getSimpleHandler)).Methods("GET")
+	return r
+
 }

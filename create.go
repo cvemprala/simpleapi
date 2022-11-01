@@ -29,7 +29,6 @@ func (c CreateSimpleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	id, err := c.repo.Create(request)
 	if err != nil {
 		w.Write([]byte(err.Error()))

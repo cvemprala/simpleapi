@@ -40,7 +40,7 @@ func (sr SimpleRepository) Get(id string) (Simple, error) {
 	sqlStatement := `SELECT * FROM simple WHERE id=$1`
 	row := sr.db.QueryRow(sqlStatement, id)
 	var simple Simple
-	err := row.Scan(&simple.ID, &simple.Name, &simple.Birthday, &simple.Phone, &simple.Email)
+	err := row.Scan(&simple.Name, &simple.Birthday, &simple.Phone, &simple.Email, &simple.ID)
 	if err != nil {
 		return Simple{}, err
 	}
